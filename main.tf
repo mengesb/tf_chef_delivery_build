@@ -110,12 +110,10 @@ resource "aws_instance" "chef-delivery-build" {
     inline = [
       "[ -x /usr/sbin/apt-get ] && sudo apt-get install -y git || sudo yum install -y git",
       "sudo mkdir -p /etc/delivery /etc/chef",
-      "sudo mv /tmp/.chef/keys/*.pem /etc/delivery/",
-      "sudo mv /tmp/.chef/keys/encrypted_data_bag_secret /etc/delivery/",
-      "sudo mv /tmp/.chef/trusted_certs /etc/chef",
-      "sudo cp /tmp/.chef/knife.rb /etc/chef",
-      "sudo cp /tmp/.chef/knife.rb /etc/delivery",
-      "sudo rm -rf /tmp/.chef",
+      "sudo cp -R /tmp/.chef/* /etc/delivery",
+      "sudo cp -R /tmp/.chef/keys/* /etc/delivery",
+      "sudo cp -R /tmp/.chef/* /etc/chef",
+      "sudo mv /etc/delivery/trusted_certs /etc/chef",
       "sudo chown -R root:root /etc/delivery /etc/chef",
       "echo Prepared for Chef Provisioner run"
     ]
