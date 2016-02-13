@@ -113,6 +113,7 @@ resource "aws_instance" "chef-delivery-build" {
       "sudo cp -R /tmp/.chef/* /etc/delivery",
       "sudo cp -R /tmp/.chef/keys/* /etc/delivery",
       "sudo cp -R /tmp/.chef/* /etc/chef",
+      "sudo cp -R /tmp/.chef/keys/* /etc/chef",
       "sudo mv /etc/delivery/trusted_certs /etc/chef",
       "sudo chown -R root:root /etc/delivery /etc/chef",
       "echo Prepared for Chef Provisioner run"
@@ -129,7 +130,8 @@ resource "aws_instance" "chef-delivery-build" {
     # environment = "_default"
     run_list = ["delivery_build"]
     node_name = "${format("%s-%02d-%s", var.delivery_build_basename, count.index + 1, var.chef_org_short)}"
-    secret_key = "${path.cwd}/.chef/encrypted_data_bag_secret"
+    # secret_key = "${file("${path.cwd}/.chef/keys/encrypted_data_bag_secret")}"
+    # secret_key = "${path.cwd}/.chef/encrypted_data_bag_secret"
     server_url = "${var.chef_server_url}"
     validation_client_name = "${var.chef_org_short}-validator"
     validation_key = "${file("${path.cwd}/.chef/keys/${var.chef_org_short}-validator.pem")}"
