@@ -50,9 +50,12 @@ variable "chef_delivery_sg" {
 variable "chef_server_public_dns" {
   description = "The DNS address of the CHEF Server"
 }
+variable "chef_delivery_public_dns" {
+  description = "The DNS address of CHEF Delivery"
+}
 variable "chef_org_short" {
   description = "Short CHEF Server organization name (lowercase alphanumeric characters only)"
 }
-variable "encrypted_data_bag_secret"
+variable "encrypted_data_bag_secret" {
   description = "The encrypted data bag secret"
 }
