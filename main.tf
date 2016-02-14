@@ -49,7 +49,7 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_22_tcp_all" {
   from_port = 22
   to_port = 22
   protocol = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+  cidr_blocks = ["${split(",", var.ssh_cidrs)}"]
   security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
 # Egress: ALL
