@@ -7,15 +7,7 @@ resource "aws_security_group" "chef-delivery-build" {
     Name = "chef-delivery-build security group"
   }
 }
-# SSH - all
-resource "aws_security_group_rule" "chef-delivery-build_allow_22_tcp_all" {
-  type = "ingress"
-  from_port = 22
-  to_port = 22
-  protocol = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.chef-delivery-build.id}"
-}
+# CHEF Server - all
 resource "aws_security_group_rule" "chef-delivery-build_allow_chef-server_all" {
   type = "ingress"
   from_port = 0
@@ -24,6 +16,7 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_chef-server_all" {
   source_security_group_id = "${var.chef_server_sg}"
   security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
+# CHEF Delivery - all
 resource "aws_security_group_rule" "chef-delivery-build_allow_chef-delivery_all" {
   type = "ingress"
   from_port = 0
@@ -32,6 +25,7 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_chef-delivery_all"
   source_security_group_id = "${var.chef_delivery_sg}"
   security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
+# CHEF Server - allow all from build servers
 resource "aws_security_group_rule" "chef-server_allow_chef-delivery-build_all" {
   type = "ingress"
   from_port = 0
@@ -40,6 +34,7 @@ resource "aws_security_group_rule" "chef-server_allow_chef-delivery-build_all" {
   source_security_group_id = "${aws_security_group.chef-delivery-build.id}"
   security_group_id = "${var.chef_server_sg}"
 }
+# CHEF Delivery - allow all from build servers
 resource "aws_security_group_rule" "chef-delivery_allow_chef-delivery-build_all" {
   type = "ingress"
   from_port = 0
@@ -47,6 +42,15 @@ resource "aws_security_group_rule" "chef-delivery_allow_chef-delivery-build_all"
   protocol = "-1"
   source_security_group_id = "${aws_security_group.chef-delivery-build.id}"
   security_group_id = "${var.chef_delivery_sg}"
+}
+# SSH - all
+resource "aws_security_group_rule" "chef-delivery-build_allow_22_tcp_all" {
+  type = "ingress"
+  from_port = 22
+  to_port = 22
+  protocol = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+  security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
 # Egress: ALL
 resource "aws_security_group_rule" "chef-delivery-build_allow_all" {
@@ -57,6 +61,29 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_all" {
   cidr_blocks = ["0.0.0.0/0"]
   security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
+# CHEF Delivery Build Servers' Requirements
+#resource "null_resource" "chef-delivery-build-requirements" {
+#  provisioner "remote-exec" {
+#    connection {
+#      user = "${var.aws_ami_user}"
+#      private_key = "${var.aws_private_key_file}"
+#      host = "${var.chef_server_public_dns}"
+#    }
+#    inline = [
+#      "echo 'Hello' to CHEF Delivery"
+#    ]
+#  }
+#  provisioner "remote-exec" {
+#    connection {
+#      user = "${var.aws_ami_user}"
+#      private_key = "${var.aws_private_key_file}"
+#      host = "${var.chef_delivery_public_dns}"
+#    }
+#    inline = [
+#      "echo 'Hello' to CHEF Delivery"
+#    ]
+#  }
+#}
 # CHEF Delivery Build Servers
 resource "aws_instance" "chef-delivery-build" {
   count = "${var.delivery_build_count}"
@@ -111,9 +138,7 @@ resource "aws_instance" "chef-delivery-build" {
       "[ -x /usr/sbin/apt-get ] && sudo apt-get install -y git || sudo yum install -y git",
       "sudo mkdir -p /etc/delivery /etc/chef",
       "sudo cp -R /tmp/.chef/* /etc/delivery",
-      "sudo cp -R /tmp/.chef/keys/* /etc/delivery",
       "sudo cp -R /tmp/.chef/* /etc/chef",
-      "sudo cp -R /tmp/.chef/keys/* /etc/chef",
       "sudo mv /etc/delivery/trusted_certs /etc/chef",
       "sudo chown -R root:root /etc/delivery /etc/chef",
       "echo Prepared for Chef Provisioner run"
@@ -130,11 +155,10 @@ resource "aws_instance" "chef-delivery-build" {
     # environment = "_default"
     run_list = ["delivery_build"]
     node_name = "${format("%s-%02d-%s", var.delivery_build_basename, count.index + 1, var.chef_org_short)}"
-    # secret_key = "${file("${path.cwd}/.chef/keys/encrypted_data_bag_secret")}"
-    # secret_key = "${path.cwd}/.chef/encrypted_data_bag_secret"
-    server_url = "${var.chef_server_url}"
+    secret_key = "${var.encrypted_data_bag_secret}"
+    server_url = "https://${var.chef_server_public_dns}/organizations/${var.chef_org_short}"
     validation_client_name = "${var.chef_org_short}-validator"
-    validation_key = "${file("${path.cwd}/.chef/keys/${var.chef_org_short}-validator.pem")}"
+    validation_key = "${file("${path.cwd}/.chef/${var.chef_org_short}-validator.pem")}"
   }
 }
 
