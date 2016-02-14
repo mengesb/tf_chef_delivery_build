@@ -59,3 +59,7 @@ variable "chef_org_short" {
 variable "encrypted_data_bag_secret" {
   description = "The encrypted data bag secret"
 }
+variable "ssh_cidrs" {
+  description = "List of CIDRs to allow SSH from"
+  default = "0.0.0.0/0"
+}
