@@ -86,14 +86,14 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_all" {
 #}
 # CHEF Delivery Build Servers
 resource "aws_instance" "chef-delivery-build" {
-  count = "${var.delivery_build_count}"
+  count = "${var.count}"
   ami = "${var.aws_ami_id}"
   instance_type = "${var.aws_flavor}"
   subnet_id = "${var.aws_subnet_id}"
   vpc_security_group_ids = ["${aws_security_group.chef-delivery-build.id}"]
   key_name = "${var.aws_key_name}"
   tags = {
-    Name = "${format("%s-%02d-%s", var.delivery_build_basename, count.index + 1, var.chef_org_short)}"
+    Name = "${format("%s-%02d", var.basename, count.index + 1)}"
   }
   root_block_device = {
     delete_on_termination = true
@@ -154,7 +154,7 @@ resource "aws_instance" "chef-delivery-build" {
     }
     # environment = "_default"
     run_list = ["delivery_build"]
-    node_name = "${format("%s-%02d-%s", var.delivery_build_basename, count.index + 1, var.chef_org_short)}"
+    node_name = "${format("%s-%02d", var.basename, count.index + 1)}"
     secret_key = "${var.encrypted_data_bag_secret}"
     server_url = "https://${var.chef_server_public_dns}/organizations/${var.chef_org_short}"
     validation_client_name = "${var.chef_org_short}-validator"
