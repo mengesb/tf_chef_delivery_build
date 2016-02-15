@@ -1,4 +1,6 @@
+#
 # AWS provider specific configs
+#
 variable "aws_access_key" {
   description = "Your AWS key (ex. $AWS_ACCESS_KEY_ID)"
 }
@@ -32,14 +34,16 @@ variable "aws_region" {
   description = "AWS Region to deploy to"
   default = "us-west-1"
 }
+#
 # tf_chef_delivery_server specific configs
-variable "count" {
-  description = "Number of CHEF Delivery build servers to provision"
-  default = 5
-}
+#
 variable "basename" {
   description = "Basename for AWS Name tag of CHEF Delivery server"
   default = "chef-delivery-build"
+}
+variable "count" {
+  description = "Number of CHEF Delivery build servers to provision"
+  default = 5
 }
 variable "chef_server_sg" {
   description = "The AWS security group of the CHEF Server"
@@ -47,11 +51,8 @@ variable "chef_server_sg" {
 variable "chef_delivery_sg" {
   description = "The AWS security group of the CHEF Delivery Server"
 }
-variable "chef_server_public_dns" {
+variable "chef_server_dns" {
   description = "The DNS address of the CHEF Server"
-}
-variable "chef_delivery_public_dns" {
-  description = "The DNS address of CHEF Delivery"
 }
 variable "chef_org_short" {
   description = "Short CHEF Server organization name (lowercase alphanumeric characters only)"

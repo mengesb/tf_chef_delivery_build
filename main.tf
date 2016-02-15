@@ -61,29 +61,6 @@ resource "aws_security_group_rule" "chef-delivery-build_allow_all" {
   cidr_blocks = ["0.0.0.0/0"]
   security_group_id = "${aws_security_group.chef-delivery-build.id}"
 }
-# CHEF Delivery Build Servers' Requirements
-#resource "null_resource" "chef-delivery-build-requirements" {
-#  provisioner "remote-exec" {
-#    connection {
-#      user = "${var.aws_ami_user}"
-#      private_key = "${var.aws_private_key_file}"
-#      host = "${var.chef_server_public_dns}"
-#    }
-#    inline = [
-#      "echo 'Hello' to CHEF Delivery"
-#    ]
-#  }
-#  provisioner "remote-exec" {
-#    connection {
-#      user = "${var.aws_ami_user}"
-#      private_key = "${var.aws_private_key_file}"
-#      host = "${var.chef_delivery_public_dns}"
-#    }
-#    inline = [
-#      "echo 'Hello' to CHEF Delivery"
-#    ]
-#  }
-#}
 # CHEF Delivery Build Servers
 resource "aws_instance" "chef-delivery-build" {
   count = "${var.count}"
@@ -102,12 +79,7 @@ resource "aws_instance" "chef-delivery-build" {
     user = "${var.aws_ami_user}"
     private_key = "${var.aws_private_key_file}"
   }
-  # Copy over .chef to /tmp
-  provisioner "file" {
-    source = "${path.cwd}/.chef"
-    destination = "/tmp"
-  }
-  # Basic Setup
+  # Hostname setup
   provisioner "remote-exec" {
     inline = [
       "EC2IPV4=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)",
@@ -120,7 +92,12 @@ resource "aws_instance" "chef-delivery-build" {
       "echo ${self.public_dns}|sed 's/\\..*//' > /tmp/hostname",
       "sudo chown root:root /tmp/hostname",
       "[ -f /etc/sysconfig/network ] && sudo sed -i 's/^HOSTNAME.*/HOSTNAME=${self.public_dns}/' /etc/sysconfig/network || sudo cp /tmp/hostname /etc/hostname",
-      "sudo rm /tmp/hostname",
+      "sudo rm /tmp/hostname"
+    ]
+  }
+  # Handle iptables
+  provisioner "remote-exec" {
+    inline = [
       "sudo iptables -F",
       "sudo iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT",
       "sudo iptables -A INPUT -p icmp -j ACCEPT",
@@ -132,18 +109,26 @@ resource "aws_instance" "chef-delivery-build" {
       "sudo service iptables restart"
     ]
   }
-  # Setup
+  # Create required paths
   provisioner "remote-exec" {
     inline = [
-      "[ -x /usr/sbin/apt-get ] && sudo apt-get install -y git || sudo yum install -y git",
-      "sudo mkdir -p /etc/delivery /etc/chef",
-      "sudo cp -R /tmp/.chef/* /etc/delivery",
-      "sudo cp -R /tmp/.chef/* /etc/chef",
-      "sudo mv /etc/delivery/trusted_certs /etc/chef",
-      "sudo chown -R root:root /etc/delivery /etc/chef",
-      "echo Prepared for Chef Provisioner run"
+      "mkdir -p /tmp/.chef",
+      "sudo mkdir -p /etc/chef"
     ]
   }
+  # Copy over trusted certificates
+  provisioner "file" {
+    source = "${path.cwd}/.chef/trusted_certs"
+    destination = "/tmp/.chef"
+  }
+  # Put files in proper locations
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /tmp/.chef/trusted_certs /etc/chef",
+      "sudo chown -R root:root /etc/chef"
+    ]
+  }
+  # Provision with CHEF
   provisioner "chef" {
     attributes {
       "delivery_build" {
@@ -156,9 +141,8 @@ resource "aws_instance" "chef-delivery-build" {
     run_list = ["delivery_build"]
     node_name = "${format("%s-%02d", var.basename, count.index + 1)}"
     secret_key = "${file("${var.secret_key_file}")}"
-    server_url = "https://${var.chef_server_public_dns}/organizations/${var.chef_org_short}"
+    server_url = "https://${var.chef_server_dns}/organizations/${var.chef_org_short}"
     validation_client_name = "${var.chef_org_short}-validator"
     validation_key = "${file("${path.cwd}/.chef/${var.chef_org_short}-validator.pem")}"
   }
 }
-
