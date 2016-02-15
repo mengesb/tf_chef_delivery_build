@@ -56,8 +56,8 @@ variable "chef_delivery_public_dns" {
 variable "chef_org_short" {
   description = "Short CHEF Server organization name (lowercase alphanumeric characters only)"
 }
-variable "encrypted_data_bag_secret" {
-  description = "The encrypted data bag secret"
+variable "secret_key_file" {
+  description = "The encrypted data bag secret file"
 }
 variable "ssh_cidrs" {
   description = "List of CIDRs to allow SSH from"
