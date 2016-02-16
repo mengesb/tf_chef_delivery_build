@@ -79,6 +79,13 @@ resource "aws_instance" "chef-delivery-build" {
     user = "${var.aws_ami_user}"
     private_key = "${var.aws_private_key_file}"
   }
+  # Create required paths
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /tmp/.chef",
+      "sudo mkdir -p /etc/chef"
+    ]
+  }
   # Hostname setup
   provisioner "remote-exec" {
     inline = [
@@ -109,13 +116,6 @@ resource "aws_instance" "chef-delivery-build" {
       "sudo service iptables restart"
     ]
   }
-  # Create required paths
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir -p /tmp/.chef",
-      "sudo mkdir -p /etc/chef"
-    ]
-  }
   # Copy over trusted certificates
   provisioner "file" {
     source = "${path.cwd}/.chef/trusted_certs"
@@ -128,6 +128,20 @@ resource "aws_instance" "chef-delivery-build" {
       "sudo chown -R root:root /etc/chef"
     ]
   }
+  # BECAUSE PACKAGECLOUD SUCKS!
+  provisioner "remote-exec" {
+    inline = [
+      "curl -s https://packagecloud.io/install/repositories/imeyer/runit/script.deb.sh -o /tmp/.chef/script.deb.sh",
+      "curl -s https://packagecloud.io/install/repositories/imeyer/runit/script.rpm.sh -o /tmp/.chef/script.rpm.sh",
+      "[ -x /usr/sbin/apt-get ] && sudo bash /tmp/.chef/script.deb.sh || sudo bash /tmp/.chef/script.rpm.sh",
+      "[ -f /etc/yum.repos.d/imeyer_runit.repo ] && sudo sed -i 's|?dist=.&amp;os=el||g' /etc/yum.repos.d/imeyer_runit.repo",
+      "[ -x /usr/bin/yum ] && sudo yum -q makecache -y --disablerepo=* --enablerepo=imeyer_runit",
+      "[ -x /usr/bin/yum ] && sudo yum install -y pygpgme yum-utils",
+      "[ -x /usr/sbin/apt-get ] && sudo apt-get install -y runit || sudo yum install -y runit",
+      "rm -f /tmp/.chef/script.*.sh"
+    ]
+  }
+
   # Provision with CHEF
   provisioner "chef" {
     attributes {
