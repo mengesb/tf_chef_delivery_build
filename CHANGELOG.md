@@ -1,3 +1,10 @@
+v0.2.0 (2016-03-21)
+-------------------
+- Brought code in line with other TF modules written
+- Added attributes-json.tpl
+- Style updates
+- Alphabetize variables and tidy things up
+
 v0.1.2 (2016-02-16)
 -------------------
 - Moved /tmp/.chef create up
