@@ -1,5 +1,5 @@
 # tf_chef_delivery_build
-Terraform module to setup CHEF Delivery build nodes. Requires CHEF Server
+Terraform module to setup CHEF Delivery build nodes. Requires CHEF Server and Delivery
 
 ## Assumptions
 
@@ -52,7 +52,8 @@ These resources will incur charges on your AWS bill. It is your responsibility t
 * `delivery_sg`: Delivery server security group id.
 * `r53`: Boolean determines if Route53 will be used or not. Default: `0`
 * `r53_ttl`: Time to Live (TTL) setting for Route53 A record to be created. Default: `180`
-* `r53_zone_id`: AWS Route53 Zone ID to add an A record for the Chef Server
+* `r53_zone_id`: AWS Route53 Zone ID to add an A record for the build servers
+* `r53_zone_id`: AWS Route53 Internal Zone ID to add an A record for the build servers
 * `secret_key_file`: Encrypted data bag secret key file.
 * `server_count`: Count of build nodes to create. Default: `5`
 * `tag_description`: Text field tag 'Description'
