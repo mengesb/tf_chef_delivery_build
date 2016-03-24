@@ -1,3 +1,9 @@
+v0.2.1 (2016-03-23)
+-------------------
+- Added internal dns handles
+- Fixed server_count variable
+- Added system::default to run_list
+
 v0.2.0 (2016-03-21)
 -------------------
 - Brought code in line with other TF modules written

@@ -111,7 +111,7 @@ resource "aws_instance" "delivery-build" {
     # environment = "_default"
     log_to_file = true
     node_name = "${format("%s-%02d.%s", var.basename, count.index + 1, var.domain)}"
-    run_list = ["delivery_build"]
+    run_list = ["system::default","delivery_build"]
     secret_key = "${file("${var.secret_key_file}")}"
     server_url = "https://${var.chef_fqdn}/organizations/${var.chef_org}"
     validation_client_name = "${var.chef_org}-validator"
@@ -120,10 +120,20 @@ resource "aws_instance" "delivery-build" {
 }
 # Public Route53 DNS record
 resource "aws_route53_record" "delivery-build" {
-  count   = "${server_count}"
+  count   = "${var.server_count}"
   zone_id = "${var.r53_zone_id}"
   name    = "${element(aws_instance.delivery-build.*.tags.Name, count.index)}"
   type    = "A"
   ttl     = "${var.r53_ttl}"
   records = ["${element(aws_instance.delivery-build.*.public_ip, count.index)}"]
 }
+# Private Route53 DNS record
+resource "aws_route53_record" "delivery-build-private" {
+  count   = "${var.server_count}"
+  zone_id = "${var.r53_zone_internal_id}"
+  name    = "${element(aws_instance.delivery-build.*.tags.Name, count.index)}"
+  type    = "A"
+  ttl     = "${var.r53_ttl}"
+  records = ["${element(aws_instance.delivery-build.*.private_ip, count.index)}"]
+}
+
