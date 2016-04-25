@@ -1,4 +1,7 @@
 {
+  "chef_client": {
+    "init_style": "none"
+  },
   "delivery_build": {
     "delivery-cli": {
       "options": "--nogpgcheck"
