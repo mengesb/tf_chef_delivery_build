@@ -3,6 +3,10 @@ tf_chef_delivery_build CHANGELOG
 
 This file is used to list changes made in each version of the tf_chef_delivery_build Terraform plan.
 
+v0.3.1 (2016-04-25)
+-------------------
+- [Brian Menges] - Remove delivery-cli customization in `attributes-json.tpl`
+
 v0.3.0 (2016-04-25)
 -------------------
 - [Brian Menges] - Documentation updates
