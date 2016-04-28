@@ -1,10 +1,10 @@
 # Delivery Build AWS security group - https://github.com/chef-cookbooks/delivery-cluster
 resource "aws_security_group" "delivery-build" {
-  name        = "delivery-build security group"
-  description = "Delivery Build security group"
+  name        = "${var.basename}-xx.${var.domain} security group"
+  description = "Delivery Build ${var.basename}-xx.${var.domain}"
   vpc_id      = "${var.aws_vpc_id}"
   tags        = {
-    Name      = "Delivery Build security group"
+    Name      = "${var.basename}-xx.${var.domain} security group"
   }
 }
 # SSH from Delivery
